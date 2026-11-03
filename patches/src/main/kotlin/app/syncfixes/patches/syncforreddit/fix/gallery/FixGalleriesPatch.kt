@@ -1,9 +1,9 @@
 package app.syncfixes.patches.syncforreddit.fix.gallery
 
-import app.morphe.patcher.extensions.InstructionExtensions.addInstructions
-import app.morphe.patcher.extensions.InstructionExtensions.instructions
-import app.morphe.patcher.patch.PatchException
-import app.morphe.patcher.patch.bytecodePatch
+import app.revanced.patcher.extensions.addInstructions
+import app.revanced.patcher.extensions.instructions
+import app.revanced.patcher.patch.PatchException
+import app.revanced.patcher.patch.bytecodePatch
 import app.syncfixes.patches.syncforreddit.shared.Constants.COMPATIBILITY_SYNC_ALL
 import app.syncfixes.patches.syncforreddit.shared.Constants.EXTENSION
 import app.syncfixes.patches.syncforreddit.shared.Constants.EXTENSION_PACKAGE
@@ -18,15 +18,16 @@ val fixGalleriesPatch = bytecodePatch(
     name = "Fix Reddit galleries",
     description = "Fixes Reddit image galleries failing to load (\"Could not load gallery\") since Reddit " +
         "blocked /api/info for third-party clients. Galleries are loaded from /comments instead.",
-    default = true,
 ) {
     compatibleWith(*COMPATIBILITY_SYNC_ALL)
 
     extendWith(EXTENSION)
 
-    execute {
+    apply {
+        val urlMethod = galleryUrlMethod
+
         // Send the request to /comments/{id}.json instead of /api/info.
-        GalleryUrlFingerprint.method.apply {
+        urlMethod.apply {
             val returns = instructions.withIndex()
                 .filter { it.value.opcode == Opcode.RETURN_OBJECT }
                 .map { it.index to (it.value as OneRegisterInstruction).registerA }
@@ -44,7 +45,7 @@ val fixGalleriesPatch = bytecodePatch(
         }
 
         // Unwrap the /comments reply into the Listing that Sync parses (and caches).
-        GalleryParseResponseFingerprint.method.addInstructions(
+        galleryParseResponseMethod(urlMethod).addInstructions(
             0,
             """
                 invoke-static/range { p1 .. p1 }, $EXTENSION_CLASS->galleryResponse($NETWORK_RESPONSE)$NETWORK_RESPONSE

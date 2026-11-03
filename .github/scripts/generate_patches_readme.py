@@ -236,6 +236,12 @@ generated  = build_content(expanded=expanded)
 # Replace template links if present
 readme = readme.replace("https://morphe.software/add-source?github=xyz-user/xyz-patches", f"https://morphe.software/add-source?github={repo_full}")
 readme = readme.replace("https://github.com/xyz-user/xyz-patches", f"https://github.com/{repo_full}")
+# Point the ReVanced Manager bundle URL at the repository being released
+readme = re.sub(
+    r"https://raw\.githubusercontent\.com/[^/\s]+/[^/\s]+/main/patches-bundle\.json",
+    f"https://raw.githubusercontent.com/{repo_full}/main/patches-bundle.json",
+    readme,
+)
 
 new_readme = re.sub(
     rf"{START_PATTERN}.*?{re.escape(END_MARKER)}",

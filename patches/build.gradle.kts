@@ -13,7 +13,7 @@ patches {
 }
 
 // Separate configuration so gson is available at runtime for the
-// generatePatchesList task but never bundled into the APK.
+// generatePatchesList task but never bundled into the patches file.
 val patchListGeneratorClasspath = configurations.create("patchListGeneratorClasspath")
 
 dependencies {
@@ -23,16 +23,11 @@ dependencies {
 
 tasks {
     register<JavaExec>("generatePatchesList") {
-        description = "Build patch with patch list"
+        description = "Generates patches-list.json from the patches file"
 
-        dependsOn(build)
+        dependsOn("jar")
 
         classpath = sourceSets["main"].runtimeClasspath + patchListGeneratorClasspath
         mainClass.set("util.PatchListGeneratorKt")
-    }
-
-    // Used by gradle-semantic-release-plugin.
-    publish {
-        dependsOn("generatePatchesList")
     }
 }

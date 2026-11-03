@@ -1,6 +1,6 @@
 # 🧩 Sync for Reddit Fixes
 
-Morphe patches that fix **load more comments** and **Reddit galleries** in **Sync for Reddit** and
+ReVanced patches that fix **load more comments** and **Reddit galleries** in **Sync for Reddit** and
 **Sync for Reddit Pro**, which broke when Reddit blocked `/api/morechildren` and `/api/info` for
 third-party clients.
 
@@ -11,11 +11,11 @@ the other fixes Sync needs.
 
 ### How to use these patches
 
-Click the button below, or manually add this repo url to Morphe Manager: https://github.com/trulow/sync-reddit-fixes
+In ReVanced Manager, add this URL as a remote patch bundle:
 
-<a href="https://morphe.software/add-source?github=trulow/sync-reddit-fixes">
-  <img src=".github/assets/add-to-morphe.svg" alt="Add to Morphe" height="48">
-</a>
+```
+https://raw.githubusercontent.com/trulow/sync-reddit-fixes/main/patches-bundle.json
+```
 
 ## 🩹 Patches list
 
@@ -91,35 +91,36 @@ method signatures, never by obfuscated names.
 - These patches only change *where* the two requests go. Sync still needs working API access (the patcheddit
   **Spoof client** patch with your own client ID), or no request succeeds.
 
-## 📲 Applying the patches with Morphe
+## 📲 Applying the patches with ReVanced
 
 You need your own copy of Sync for Reddit or Sync for Reddit Pro `v23.06.30-13:39`. This project doesn't
 provide APKs.
 
-### Morphe Manager (on your phone)
+### ReVanced Manager (on your phone)
 
-1. Add this repository as a patch source: tap **Add to Morphe** above, or in Morphe Manager add the source
-   `https://github.com/trulow/sync-reddit-fixes`. (Requires a GitHub release, see *Releasing* below.) To use a
-   bundle you built yourself, copy `patches-<version>.mpp` to the phone and add it as a local patch file.
-2. Add the patcheddit source as well (`https://github.com/wchill/patcheddit`) for **Spoof client** and its other
-   Sync patches.
-3. Select your **original, unpatched** Sync APK, then select the patches you want from this source along with
+1. Add this repository as a patch bundle: in ReVanced Manager open the patch bundles screen, tap **+**, choose
+   **Remote** and enter `https://raw.githubusercontent.com/trulow/sync-reddit-fixes/main/patches-bundle.json`.
+   The manager reads the latest release from that file and can update the bundle automatically. (Requires a
+   GitHub release, see *Releasing* below.) To use a bundle you built yourself, copy `patches-<version>.rvp` to
+   the phone and add it as a **Local** patch bundle instead.
+2. Add the patcheddit bundle as well for **Spoof client** and its other Sync patches.
+3. Select your **original, unpatched** Sync APK, then select the patches you want from this bundle along with
    the patcheddit patches you use. If you select **Fix Redgifs API** here, turn off patcheddit's patch of the
    same name.
 4. Patch and install.
 
-### Morphe desktop / CLI
+### ReVanced CLI
 
-Download `morphe-desktop-<version>-all.jar` from
-[MorpheApp/morphe-cli releases](https://github.com/MorpheApp/morphe-cli/releases) and run:
+Download the latest `revanced-cli-<version>-all.jar` from
+[ReVanced/revanced-cli releases](https://github.com/ReVanced/revanced-cli/releases) and run:
 
 ```bash
-java -jar morphe-desktop-all.jar patch -p patches-<version>.mpp -p patcheddit.mpp -o sync-patched.apk sync.apk
+java -jar revanced-cli-all.jar patch -p patches-<version>.rvp -p patcheddit.rvp -o sync-patched.apk sync.apk
 ```
 
 To apply only some of the patches, add `--exclusive` and `-e "<patch name>"` for each one you want.
-Use `list-patches --patches=patches-<version>.mpp -p -v` to see the patches with their supported packages and
-versions.
+Use `list-patches --with-packages --with-versions patches-<version>.rvp` to see the patches with their supported
+packages and versions.
 
 ## 🛠️ Building
 
@@ -128,23 +129,30 @@ Requirements:
 - JDK 17 or newer. Android Studio's bundled runtime works:
   `export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"`
 - The Android SDK with **platform 36** (`ANDROID_HOME` set, or `sdk.dir` in `local.properties`).
-- A GitHub token with the `read:packages` scope, since Morphe publishes its Gradle plugin and patcher to
-  GitHub Packages. Either add `gpr.user` / `gpr.key` to `~/.gradle/gradle.properties`, or export
-  `GITHUB_ACTOR` and `GITHUB_TOKEN`. With the GitHub CLI:
+- A GitHub token with the `read:packages` scope, since ReVanced publishes its Gradle plugin and patcher to
+  GitHub Packages. Add it to `~/.gradle/gradle.properties`:
 
-  ```bash
-  gh auth refresh -h github.com -s read:packages
-  export GITHUB_ACTOR=<your-github-username> GITHUB_TOKEN=$(gh auth token)
+  ```properties
+  # ReVanced patches Gradle plugin
+  gpr.user = <your-github-username>
+  gpr.key = <token>
+  # ReVanced Patcher
+  githubPackagesUsername = <your-github-username>
+  githubPackagesPassword = <token>
   ```
+
+  With the GitHub CLI, `gh auth refresh -h github.com -s read:packages` adds the scope and `gh auth token`
+  prints the token.
 
 Then build:
 
 ```bash
-./gradlew buildAndroid
+./gradlew :patches:buildAndroid
 ```
 
-The bundle is written to `patches/build/libs/patches-<version>.mpp`. `buildAndroid` is required: it adds the
-DEX that Morphe Manager needs on Android.
+The bundle is written to `patches/build/libs/patches-<version>.rvp`. `buildAndroid` is required: it adds the
+DEX that ReVanced Manager needs on Android. `./gradlew :patches:generatePatchesList` regenerates
+`patches-list.json`.
 
 ### Project layout
 
@@ -152,7 +160,7 @@ The layout follows [patcheddit](https://github.com/wchill/patcheddit): one exten
 `extensions/`, and the patches for an app under its own `syncforreddit` package.
 
 ```
-extensions/syncforreddit/                    Extension module, built to extensions/syncforreddit.mpe
+extensions/syncforreddit/                    Extension module, built to extensions/syncforreddit.rve
   build.gradle.kts
   src/main/java/app/syncfixes/extension/syncforreddit/
     FixLoadMoreCommentsPatch.java            Builds the /comments request, converts its reply
@@ -161,6 +169,7 @@ extensions/syncforreddit/                    Extension module, built to extensio
   stub/                                      Compile-only Volley stubs (Sync ships Volley unobfuscated)
 patches/src/main/kotlin/app/syncfixes/patches/syncforreddit/
   shared/Constants.kt                        Supported apps, versions, shared names
+  shared/Matching.kt                         Finds methods by source file name, signature and strings
   fix/comments/Fingerprints.kt               Targets for "load more comments"
   fix/comments/FixLoadMoreCommentsPatch.kt   Bytecode hooks for "load more comments"
   fix/gallery/Fingerprints.kt                Targets for galleries
@@ -208,16 +217,16 @@ client behind Sync's Volley requests. The patch finds that client by following t
 
 ## 🚀 Releasing
 
-This project keeps the template's release flow: commit to `dev` with semantic commit messages
-(`feat:`, `fix:`, `chore:`), and `release.yml` builds, signs (optional), and publishes releases. Merge `dev` into
-`main` for a stable release. See the
-[Morphe patches template](https://github.com/MorpheApp/morphe-patches-template) for details. Before publishing,
-update `source` in [patches/build.gradle.kts](patches/build.gradle.kts) and the links in this README if the
-repository isn't `trulow/sync-reddit-fixes`.
+Commit to `dev` with semantic commit messages (`feat:`, `fix:`, `chore:`), and `release.yml` builds and
+publishes releases. Merge `dev` into `main` for a stable release. Each release attaches
+`patches-<version>.rvp` and updates [patches-bundle.json](patches-bundle.json), the file ReVanced Manager reads
+to find the latest release. The release workflow rewrites the bundle URL in this README to the repository it
+runs in; update `source` in [patches/build.gradle.kts](patches/build.gradle.kts) if the repository isn't
+`trulow/sync-reddit-fixes`.
 
 ## ⚠️ Disclaimer
 
-Not affiliated with or endorsed by Laurence Dawson, Sync for Reddit, Reddit or the Morphe project. This
+Not affiliated with or endorsed by Laurence Dawson, Sync for Reddit, Reddit, ReVanced or the Morphe project. This
 repository contains only original patch code, no APKs and no code from Sync. You are responsible for using your
 own legally obtained copy of the app and for following the terms of the services it connects to.
 

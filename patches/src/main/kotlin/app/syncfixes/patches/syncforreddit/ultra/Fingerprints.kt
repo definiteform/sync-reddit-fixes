@@ -4,8 +4,10 @@
  */
 package app.syncfixes.patches.syncforreddit.ultra
 
-import app.morphe.patcher.Fingerprint
-import com.android.tools.smali.dexlib2.AccessFlags
+import app.revanced.patcher.patch.BytecodePatchContext
+import app.syncfixes.patches.syncforreddit.shared.hasStrings
+import app.syncfixes.patches.syncforreddit.shared.isPublicStatic
+import app.syncfixes.patches.syncforreddit.shared.methodInSourceFile
 
 /**
  * Sync's UltraHelper keeps its source file name, so methods are matched within it. Obfuscated names
@@ -14,28 +16,20 @@ import com.android.tools.smali.dexlib2.AccessFlags
 private const val ULTRA_HELPER_SOURCE = "UltraHelper.java"
 
 /** Whether the signed-in account has Sync Ultra. */
-internal object UltraHelperFingerprint : Fingerprint(
-    accessFlags = listOf(AccessFlags.PUBLIC, AccessFlags.STATIC),
-    returnType = "Z",
-    parameters = listOf(),
-    strings = listOf("UltraHelper"),
-    custom = { _, classDef -> classDef.sourceFile == ULTRA_HELPER_SOURCE },
-)
+internal val BytecodePatchContext.ultraHelperMethod
+    get() = methodInSourceFile(ULTRA_HELPER_SOURCE, "the Sync Ultra check") {
+        isPublicStatic && returnType == "Z" && parameterTypes.isEmpty() && hasStrings("UltraHelper")
+    }
 
 /** Display name of the account's Sync Ultra subscription. */
-internal object SyncUltraSubTypeFingerprint : Fingerprint(
-    accessFlags = listOf(AccessFlags.PUBLIC, AccessFlags.STATIC),
-    returnType = "Ljava/lang/String;",
-    parameters = listOf(),
-    strings = listOf("Sync Ultra Monthly", "Sync Ultra Yearly", "Sync Ultra lifetime"),
-    custom = { _, classDef -> classDef.sourceFile == ULTRA_HELPER_SOURCE },
-)
+internal val BytecodePatchContext.syncUltraSubTypeMethod
+    get() = methodInSourceFile(ULTRA_HELPER_SOURCE, "the Sync Ultra subscription type") {
+        isPublicStatic && returnType == "Ljava/lang/String;" && parameterTypes.isEmpty() &&
+            hasStrings("Sync Ultra Monthly", "Sync Ultra Yearly", "Sync Ultra lifetime")
+    }
 
 /** Whether the account's Sync Ultra subscription is the lifetime one. */
-internal object UltraLifetimeFingerprint : Fingerprint(
-    accessFlags = listOf(AccessFlags.PUBLIC, AccessFlags.STATIC),
-    returnType = "Z",
-    parameters = listOf(),
-    strings = listOf("ultra_lifetime"),
-    custom = { _, classDef -> classDef.sourceFile == ULTRA_HELPER_SOURCE },
-)
+internal val BytecodePatchContext.ultraLifetimeMethod
+    get() = methodInSourceFile(ULTRA_HELPER_SOURCE, "the Sync Ultra lifetime check") {
+        isPublicStatic && returnType == "Z" && parameterTypes.isEmpty() && hasStrings("ultra_lifetime")
+    }

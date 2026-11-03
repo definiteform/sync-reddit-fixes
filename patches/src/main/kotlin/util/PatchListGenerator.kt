@@ -1,12 +1,14 @@
 /*
  * Copyright 2025 Morphe.
  * https://github.com/MorpheApp/morphe-patches-template
+ * Adapted to ReVanced Patcher.
  */
 
 package util
 
-import app.morphe.patcher.patch.Patch
-import app.morphe.patcher.patch.loadPatchesFromJar
+import app.revanced.patcher.patch.Patch
+import app.revanced.patcher.patch.loadPatches
+import app.syncfixes.patches.syncforreddit.shared.Constants.APP_NAMES
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonObject
 import java.io.File
@@ -14,16 +16,17 @@ import java.net.URLClassLoader
 import java.util.jar.Manifest
 
 fun main() {
-    val patchFiles = setOf(
-        File("build/libs/").listFiles { file ->
-            val fileName = file.name
-            !fileName.contains("javadoc") &&
-                    !fileName.contains("sources") &&
-                    fileName.endsWith(".mpp")
-        }!!.first()
-    )
-    val loadedPatches = loadPatchesFromJar(patchFiles)
-    val patchClassLoader = URLClassLoader(patchFiles.map { it.toURI().toURL() }.toTypedArray())
+    val patchesFile = File("build/libs/").listFiles { file ->
+        val fileName = file.name
+        !fileName.contains("javadoc") &&
+                !fileName.contains("sources") &&
+                fileName.endsWith(".rvp")
+    }!!.first()
+
+    val loadedPatches = loadPatches(patchesFile) { file, throwable ->
+        throw IllegalStateException("Failed to load patches from $file", throwable)
+    }
+    val patchClassLoader = URLClassLoader(arrayOf(patchesFile.toURI().toURL()))
     val manifest = patchClassLoader.getResources("META-INF/MANIFEST.MF")
 
     while (manifest.hasMoreElements()) {
@@ -36,43 +39,28 @@ fun main() {
     }
 }
 
-@Suppress("DEPRECATION")
-private fun generatePatchList(version: String, patches: Set<Patch<*>>) {
+private fun generatePatchList(version: String, patches: Set<Patch>) {
     val listJson = File("../patches-list.json")
 
     val patchesMap = patches.sortedBy { it.name }.map { patch ->
         JsonPatch(
             name = patch.name!!,
             description = patch.description,
-            default = patch.default,
-            category = patch.category,
-            // Map each Compatibility to a JsonCompatibility object with full metadata.
+            default = patch.use,
             // Patches with null compatiblePackages are universal (apply to any app).
-            compatiblePackages = patch.compatibility?.map { compat ->
+            compatiblePackages = patch.compatiblePackages?.map { (packageName, versions) ->
                 JsonCompatibility(
-                    packageName = compat.packageName!!,
-                    name = compat.name,
-                    description = compat.description,
-                    apkFileType = compat.apkFileType?.name,
-                    // Format as #RRGGBB string for readability; null if not set
-                    appIconColor = compat.appIconColor?.let { "#%06X".format(it) },
-                    signatures = compat.signatures,
-                    formFactor = compat.formFactor?.name,
-                    targets = compat.targets.map { target ->
-                        JsonCompatibility.Target(
-                            version = target.version,
-                            versionCodes = target.versionCodes?.mapKeys { it.key.name },
-                            isExperimental = target.isExperimental,
-                            minSdk = target.minSdk,
-                            description = target.description,
-                        )
-                    },
+                    packageName = packageName,
+                    name = APP_NAMES[packageName],
+                    // Null versions means every version is supported.
+                    targets = versions?.map { JsonCompatibility.Target(version = it) } ?: emptyList(),
                 )
             },
+            dependencies = patch.dependencies.mapNotNull { it.name },
             options = patch.options.values.map { option ->
                 JsonPatch.Option(
-                    key = option.key,
-                    title = option.title,
+                    key = option.name,
+                    title = option.name,
                     description = option.description,
                     required = option.required,
                     type = option.type.toString(),
@@ -108,10 +96,9 @@ private class JsonPatch(
     val name: String? = null,
     val description: String? = null,
     val default: Boolean = true,
-    /** Null when the patch declares no category and is left ungrouped. */
-    val category: String? = null,
     /** Null means the patch is universal and applies to any app. */
     val compatiblePackages: List<JsonCompatibility>? = null,
+    val dependencies: List<String>,
     val options: List<Option>,
 ) {
     class Option(
@@ -125,32 +112,17 @@ private class JsonPatch(
     )
 }
 
-/** JSON representation of a compatible app entry, including name and per-version metadata. */
+/** JSON representation of a compatible app entry. */
 @Suppress("unused")
 private class JsonCompatibility(
-    /** Android package name, e.g. com.google.android.youtube. */
+    /** Android package name, e.g. com.laurencedawson.reddit_sync. */
     val packageName: String,
-    /** Human-readable app name declared in Compatibility, e.g. "YouTube". */
+    /** Human-readable app name, e.g. "Sync for Reddit". */
     val name: String?,
-    /** User-facing description of the app. */
-    val description: String?,
-    /** Target unpatched app file type, e.g. APK, APKM. Null if not specified. */
-    val apkFileType: String?,
-    /** App icon background color as #RRGGBB string, or null if not set. */
-    val appIconColor: String?,
-    /** Valid SHA-256 signatures of the app. */
-    val signatures: Set<String>?,
-    /** Device form factor of the app, e.g. MOBILE, TV. Null means all form factors. */
-    val formFactor: String?,
+    /** Supported versions. Empty means every version is supported. */
     val targets: List<Target>,
 ) {
     class Target(
-        val version: String?,
-        val versionCodes: Map<String, Int>?,
-        val isExperimental: Boolean,
-        /** Minimum device SDK version. Null means any SDK version. */
-        val minSdk: Int?,
-        /** Optional user-facing note about this specific version. */
-        val description: String?,
+        val version: String,
     )
 }

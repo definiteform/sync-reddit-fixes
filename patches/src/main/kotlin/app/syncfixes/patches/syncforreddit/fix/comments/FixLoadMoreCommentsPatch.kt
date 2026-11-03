@@ -1,9 +1,9 @@
 package app.syncfixes.patches.syncforreddit.fix.comments
 
-import app.morphe.patcher.extensions.InstructionExtensions.addInstructions
-import app.morphe.patcher.extensions.InstructionExtensions.instructions
-import app.morphe.patcher.patch.PatchException
-import app.morphe.patcher.patch.bytecodePatch
+import app.revanced.patcher.extensions.addInstructions
+import app.revanced.patcher.extensions.instructions
+import app.revanced.patcher.patch.PatchException
+import app.revanced.patcher.patch.bytecodePatch
 import app.syncfixes.patches.syncforreddit.shared.Constants.COMPATIBILITY_SYNC_ALL
 import app.syncfixes.patches.syncforreddit.shared.Constants.EXTENSION
 import app.syncfixes.patches.syncforreddit.shared.Constants.EXTENSION_PACKAGE
@@ -33,22 +33,24 @@ val fixLoadMoreCommentsPatch = bytecodePatch(
     description = "Fixes \"Error loading more comments\" since Reddit blocked /api/morechildren for " +
         "third-party clients. The missing comments are loaded from /comments instead. At the bottom of " +
         "very large threads Reddit's 500 comment limit can still leave some out.",
-    default = true,
 ) {
     compatibleWith(*COMPATIBILITY_SYNC_ALL)
 
     extendWith(EXTENSION)
 
-    execute {
+    apply {
         // Remember the parent of the "more" item: the request itself is not given it.
-        RequestMoreFingerprint.method.addInstructions(
+        requestMoreMethod.addInstructions(
             0,
             "invoke-static/range { p1 .. p1 }, $EXTENSION_CLASS->setMoreItem(Ljava/lang/Object;)V",
         )
 
-        MoreRequestConstructorFingerprint.method.apply {
+        val constructor = moreRequestConstructorMethod
+
+        constructor.apply {
             // The super constructor call: RedditRequest.<init>(this, Context, int method, String url, ...).
-            val superclass = MoreRequestConstructorFingerprint.classDef.superclass
+            val superclass = classDefs[definingClass]?.superclass
+                ?: throw PatchException("Class $definingClass not found")
             val superIndex = instructions.indexOfFirst { instruction ->
                 (instruction.opcode == Opcode.INVOKE_DIRECT || instruction.opcode == Opcode.INVOKE_DIRECT_RANGE) &&
                     ((instruction as ReferenceInstruction).reference as MethodReference).let {
@@ -96,7 +98,7 @@ val fixLoadMoreCommentsPatch = bytecodePatch(
         }
 
         // Convert the /comments reply into the morechildren "things" list Sync parses.
-        MoreParseResponseFingerprint.method.addInstructions(
+        moreParseResponseMethod(constructor).addInstructions(
             0,
             """
                 invoke-virtual/range { p0 .. p0 }, $VOLLEY_REQUEST->getUrl()$STRING

@@ -3,11 +3,12 @@
  */
 package app.syncfixes.patches.syncforreddit.fix.redgifs
 
-import app.morphe.patcher.extensions.InstructionExtensions.addInstructions
-import app.morphe.patcher.extensions.InstructionExtensions.instructions
-import app.morphe.patcher.extensions.InstructionExtensions.replaceInstruction
-import app.morphe.patcher.patch.PatchException
-import app.morphe.patcher.patch.bytecodePatch
+import app.revanced.patcher.extensions.addInstructions
+import app.revanced.patcher.extensions.instructions
+import app.revanced.patcher.extensions.replaceInstruction
+import app.revanced.patcher.firstClassDef
+import app.revanced.patcher.patch.PatchException
+import app.revanced.patcher.patch.bytecodePatch
 import app.syncfixes.patches.syncforreddit.shared.Constants.COMPATIBILITY_SYNC_ALL
 import app.syncfixes.patches.syncforreddit.shared.Constants.EXTENSION
 import com.android.tools.smali.dexlib2.Opcode
@@ -30,12 +31,11 @@ val fixRedgifsApiPatch = bytecodePatch(
 
     extendWith(EXTENSION)
 
-    execute {
+    apply {
         // Install the interceptor on the OkHttp client behind Volley: follow the getter BasicNetwork calls to
         // the static field it returns, then to the builder.build() whose result is stored in that field.
-        val getterCall = VolleyClientGetterCallFingerprint.instructionMatches.first().instruction
-        val getterRef = (getterCall as ReferenceInstruction).reference as MethodReference
-        val helper = mutableClassDefBy(getterRef.definingClass)
+        val getterRef = volleyClientGetterCall
+        val helper = firstClassDef(getterRef.definingClass)
         if (helper.sourceFile != "OkHttpHelper.java") {
             throw PatchException("Volley's OkHttp client getter is not in OkHttpHelper: ${getterRef.definingClass}")
         }
@@ -70,17 +70,18 @@ val fixRedgifsApiPatch = bytecodePatch(
         }
 
         // Send Sync's own user agent: Redgifs ties each token to the user agent that requested it.
-        ExtensionUserAgentFingerprint.method.addInstructions(
+        val userAgent = userAgentMethod
+        extensionUserAgentMethod.addInstructions(
             0,
             """
-                invoke-static { }, ${UserAgentFingerprint.method}
+                invoke-static { }, $userAgent
                 move-result-object v0
                 return-object v0
             """,
         )
 
         // Take the gif id from the URL with the query and fragment removed first.
-        GetGfycatIdFingerprint.method.addInstructions(
+        getGfycatIdMethod.addInstructions(
             0,
             """
                 invoke-static/range { p0 .. p0 }, $EXTENSION_CLASS->extractGifId(Ljava/lang/String;)Ljava/lang/String;

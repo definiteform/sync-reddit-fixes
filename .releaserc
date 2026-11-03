@@ -37,17 +37,16 @@
       "@MorpheApp/changelog", {
         "releaseJson": {
           "path": "patches-bundle.json",
-          "downloadUrlTemplate": "https://github.com/${owner}/${repo}/releases/download/v${version}/patches-${version}.mpp",
-          "signatureUrlTemplate": "",
-          "publicKeyPath": "morphe-signing.pub"
+          "downloadUrlTemplate": "https://github.com/${owner}/${repo}/releases/download/v${version}/patches-${version}.rvp",
+          "signatureUrlTemplate": ""
         }
       }
     ],
-    "gradle-semantic-release-plugin",
     [
       "@semantic-release/exec",
       {
-        "prepareCmd": "./gradlew generatePatchesList \
+        "prepareCmd": "sed -i 's/^version = .*/version = ${nextRelease.version}/' gradle.properties \
+          && ./gradlew :patches:buildAndroid :patches:generatePatchesList --no-daemon \
           && jq '.version=\"${nextRelease.version}\"' patches-list.json > patches-list.json.tmp && mv patches-list.json.tmp patches-list.json \
           && python3 .github/scripts/generate_patches_readme.py $GITHUB_REPOSITORY $GITHUB_REF_NAME patches-list.json README.md"
       }
@@ -70,7 +69,7 @@
       {
         "assets": [
           {
-            "path": "patches/build/libs/patches-!(*sources*|*javadoc*).mpp?(.asc)"
+            "path": "patches/build/libs/patches-!(*sources*|*javadoc*).rvp"
           }
         ],
         "successComment": false

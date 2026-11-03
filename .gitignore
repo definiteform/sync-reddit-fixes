@@ -1,6 +1,6 @@
-### Morphe
+### Signing keys
 # Private key that signs the patches file
-morphe-signing.key
+*.key
 
 ### Java template
 # Compiled class file

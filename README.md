@@ -109,6 +109,13 @@ provide APKs.
    same name.
 4. Patch and install.
 
+> [!IMPORTANT]
+> Use v1.0.1 or newer. In v1.0.0 the extension was named `extensions/syncforreddit.rve`, the same name another
+> bundle can use for its own Sync extension. ReVanced Manager then merged that bundle's file instead of this one:
+> **Fix Redgifs API** failed with `Could not find …FixRedgifsApiPatch;->defaultUserAgent`, and the other patches
+> reported success but left calls to classes the app doesn't have. If you patched with v1.0.0, update the bundle and
+> patch your original, unpatched APK again.
+
 ### ReVanced CLI
 
 Download the latest `revanced-cli-<version>-all.jar` from
@@ -175,6 +182,13 @@ patches/src/main/kotlin/app/syncfixes/patches/syncforreddit/
   fix/gallery/Fingerprints.kt                Targets for galleries
   fix/gallery/FixGalleriesPatch.kt           Bytecode hooks for galleries
 ```
+
+The extension is stored in the patches file as `extensions/syncfixes/syncforreddit.rve`, not the default
+`extensions/syncforreddit.rve`. ReVanced Manager loads every enabled bundle with one class loader, which returns
+the first resource with a given name, so the path must not match another bundle's extension. Keep `EXTENSION` in
+`shared/Constants.kt` and `name` in `extensions/syncforreddit/build.gradle.kts` the same. The galleries, comments and
+Redgifs patches check that their extension class was merged before changing anything, so a collision fails the
+patch with `Extension class … is missing` instead of producing a broken app.
 
 The Kotlin patches only insert calls; the logic lives in the Java extension, which is merged into the app.
 

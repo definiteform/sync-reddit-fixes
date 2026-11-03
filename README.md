@@ -14,13 +14,13 @@ the other fixes Sync needs.
 In ReVanced Manager, add this URL as a remote patch bundle:
 
 ```
-https://raw.githubusercontent.com/trulow/sync-reddit-fixes/main/patches-bundle.json
+https://raw.githubusercontent.com/definiteform/sync-reddit-fixes/main/patches-bundle.json
 ```
 
 ## 🩹 Patches list
 
 <!-- PATCHES_START EXPANDED -->
-> **[v1.2.0](https://github.com/trulow/sync-reddit-fixes/releases/tag/v1.2.0)**&nbsp;&nbsp;•&nbsp;&nbsp;`main`&nbsp;&nbsp;•&nbsp;&nbsp;8 patches total
+> **[v1.0.0](https://github.com/definiteform/sync-reddit-fixes/releases/tag/v1.0.0)**&nbsp;&nbsp;•&nbsp;&nbsp;`main`&nbsp;&nbsp;•&nbsp;&nbsp;8 patches total
 <details open>
 <summary>📦 Sync for Reddit&nbsp;&nbsp;•&nbsp;&nbsp;4 patches</summary>
 <br>
@@ -99,7 +99,7 @@ provide APKs.
 ### ReVanced Manager (on your phone)
 
 1. Add this repository as a patch bundle: in ReVanced Manager open the patch bundles screen, tap **+**, choose
-   **Remote** and enter `https://raw.githubusercontent.com/trulow/sync-reddit-fixes/main/patches-bundle.json`.
+   **Remote** and enter `https://raw.githubusercontent.com/definiteform/sync-reddit-fixes/main/patches-bundle.json`.
    The manager reads the latest release from that file and can update the bundle automatically. (Requires a
    GitHub release, see *Releasing* below.) To use a bundle you built yourself, copy `patches-<version>.rvp` to
    the phone and add it as a **Local** patch bundle instead.

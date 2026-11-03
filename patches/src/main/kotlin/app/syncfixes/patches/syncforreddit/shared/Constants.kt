@@ -20,7 +20,11 @@ object Constants {
         SYNC_PRO_PACKAGE to setOf(SYNC_VERSION),
     )
 
-    const val EXTENSION = "extensions/syncforreddit.rve"
+    /**
+     * The extension dex in the patches file. ReVanced Manager loads every patch bundle with one class loader, which
+     * returns the first resource with a given name, so the path must not collide with another bundle's extension.
+     */
+    const val EXTENSION = "extensions/syncfixes/syncforreddit.rve"
     const val EXTENSION_PACKAGE = "Lapp/syncfixes/extension/syncforreddit"
 
     const val NETWORK_RESPONSE = "Lcom/android/volley/NetworkResponse;"

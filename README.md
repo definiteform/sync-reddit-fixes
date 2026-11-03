@@ -160,7 +160,7 @@ The layout follows [patcheddit](https://github.com/wchill/patcheddit): one exten
 `extensions/`, and the patches for an app under its own `syncforreddit` package.
 
 ```
-extensions/syncforreddit/                    Extension module, built to extensions/syncforreddit.rve
+extensions/syncforreddit/                    Extension module, built to extensions/syncfixes/syncforreddit.rve
   build.gradle.kts
   src/main/java/app/syncfixes/extension/syncforreddit/
     FixLoadMoreCommentsPatch.java            Builds the /comments request, converts its reply

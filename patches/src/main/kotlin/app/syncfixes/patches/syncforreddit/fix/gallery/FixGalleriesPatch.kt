@@ -8,6 +8,7 @@ import app.syncfixes.patches.syncforreddit.shared.Constants.COMPATIBILITY_SYNC_A
 import app.syncfixes.patches.syncforreddit.shared.Constants.EXTENSION
 import app.syncfixes.patches.syncforreddit.shared.Constants.EXTENSION_PACKAGE
 import app.syncfixes.patches.syncforreddit.shared.Constants.NETWORK_RESPONSE
+import app.syncfixes.patches.syncforreddit.shared.requireExtensionClass
 import com.android.tools.smali.dexlib2.Opcode
 import com.android.tools.smali.dexlib2.iface.instruction.OneRegisterInstruction
 
@@ -24,6 +25,8 @@ val fixGalleriesPatch = bytecodePatch(
     extendWith(EXTENSION)
 
     apply {
+        requireExtensionClass(EXTENSION_CLASS)
+
         val urlMethod = galleryUrlMethod
 
         // Send the request to /comments/{id}.json instead of /api/info.

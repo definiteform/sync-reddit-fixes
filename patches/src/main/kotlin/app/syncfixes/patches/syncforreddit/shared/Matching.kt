@@ -49,6 +49,18 @@ internal fun BytecodePatchContext.methodInClass(
     return firstMethod(method)
 }
 
+/**
+ * Fails the patch before it changes anything if the extension class [type] was not merged into the app,
+ * since the code the patch adds would call it.
+ */
+internal fun BytecodePatchContext.requireExtensionClass(type: String) {
+    if (classDefs[type] == null) {
+        throw PatchException(
+            "Extension class $type is missing: another patch bundle may provide a different ${Constants.EXTENSION}",
+        )
+    }
+}
+
 internal val Method.isStatic get() = AccessFlags.STATIC.isSet(accessFlags)
 
 internal val Method.isPublicStatic get() = isStatic && AccessFlags.PUBLIC.isSet(accessFlags)

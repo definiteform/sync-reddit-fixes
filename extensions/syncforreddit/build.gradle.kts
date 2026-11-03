@@ -1,5 +1,5 @@
 extension {
-    name = "extensions/syncforreddit.rve"
+    name = "extensions/syncfixes/syncforreddit.rve"
 }
 
 android {

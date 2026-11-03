@@ -9,6 +9,7 @@ import app.syncfixes.patches.syncforreddit.shared.Constants.EXTENSION
 import app.syncfixes.patches.syncforreddit.shared.Constants.EXTENSION_PACKAGE
 import app.syncfixes.patches.syncforreddit.shared.Constants.NETWORK_RESPONSE
 import app.syncfixes.patches.syncforreddit.shared.Constants.VOLLEY_REQUEST
+import app.syncfixes.patches.syncforreddit.shared.requireExtensionClass
 import com.android.tools.smali.dexlib2.Opcode
 import com.android.tools.smali.dexlib2.iface.instruction.FiveRegisterInstruction
 import com.android.tools.smali.dexlib2.iface.instruction.ReferenceInstruction
@@ -39,6 +40,8 @@ val fixLoadMoreCommentsPatch = bytecodePatch(
     extendWith(EXTENSION)
 
     apply {
+        requireExtensionClass(EXTENSION_CLASS)
+
         // Remember the parent of the "more" item: the request itself is not given it.
         requestMoreMethod.addInstructions(
             0,

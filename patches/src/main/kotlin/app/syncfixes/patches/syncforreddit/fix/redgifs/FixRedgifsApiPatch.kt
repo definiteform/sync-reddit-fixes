@@ -11,6 +11,7 @@ import app.revanced.patcher.patch.PatchException
 import app.revanced.patcher.patch.bytecodePatch
 import app.syncfixes.patches.syncforreddit.shared.Constants.COMPATIBILITY_SYNC_ALL
 import app.syncfixes.patches.syncforreddit.shared.Constants.EXTENSION
+import app.syncfixes.patches.syncforreddit.shared.requireExtensionClass
 import com.android.tools.smali.dexlib2.Opcode
 import com.android.tools.smali.dexlib2.iface.instruction.FiveRegisterInstruction
 import com.android.tools.smali.dexlib2.iface.instruction.Instruction
@@ -32,6 +33,8 @@ val fixRedgifsApiPatch = bytecodePatch(
     extendWith(EXTENSION)
 
     apply {
+        requireExtensionClass(EXTENSION_CLASS)
+
         // Install the interceptor on the OkHttp client behind Volley: follow the getter BasicNetwork calls to
         // the static field it returns, then to the builder.build() whose result is stored in that field.
         val getterRef = volleyClientGetterCall

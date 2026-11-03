@@ -1,3 +1,9 @@
+## [1.0.1](https://github.com/definiteform/sync-reddit-fixes/compare/v1.0.0...v1.0.1) (2026-11-03)
+
+### 🐛 Bug Fixes
+
+* Use a unique extension path so other bundles cannot replace it ([685afa8](https://github.com/definiteform/sync-reddit-fixes/commit/685afa8eae25f73bb84a02e3e96a776c2b2dbde3))
+
 ## 1.0.0 (2026-11-03)
 
 ### ⚠ BREAKING CHANGES
